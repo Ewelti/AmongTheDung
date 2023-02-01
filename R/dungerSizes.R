@@ -1,6 +1,7 @@
 ##Set working directory
 #Ellen's working directory:
 setwd("C:/Users/elwel/OneDrive/Desktop/AmongTheDung/rawdata")
+#Ben's working directory:
 
 # attach data
 dungb <- read.csv("DungersAll.csv")
