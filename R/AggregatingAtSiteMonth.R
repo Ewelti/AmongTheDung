@@ -9,6 +9,8 @@ library(stringr)
 library(plotrix)
 library(vegan)
 library(BiodiversityR)
+library(tidyverse)
+library(modelr)
 
 # attach dung beetle size data
 dungb <- read.csv("rawdata/DungersAll.csv")
@@ -36,9 +38,13 @@ dbsum$month <-as.numeric(dbsum$month)
 head(dbsum)
 dim(dbsum)
 
+dcode <- data.frame((dbsum %>% drop_na(trt) %>% model_matrix(~ -1 + trt)))
+dbsum_d <- cbind(dbsum,dcode)
+head(dbsum_d)
+
 ############# attach temp data
 temp <- read.csv("outputs/Temp_daily_SiteMo.csv")
-est <- merge(dbsum,temp,by=c("site","month"),all.x=T, all.y=T)
+est <- merge(dbsum_d,temp,by=c("site","month"),all.x=T, all.y=T)
 head(est)
 dim(est)
 
@@ -47,7 +53,7 @@ poo <- read.csv("rawdata/PooCount.csv")
 head(poo)
 
 #means by trt
-poosum <- aggregate(cbind(browser_100m2,patty_100m2,PD_1m2,browser_minusLastMo,patty_minusLastMo,PD_minusLastMo) ~ code, data = poo, FUN = mean, na.action=NULL)
+poosum <- aggregate(cbind(browser_100m2,patty_100m2,PD_1m2,browser_minusLastMo,patty_minusLastMo,PD_minusLastMo,browser_lastMo,patty_lastMo,PD_lastMo) ~ code, data = poo, FUN = mean, na.action=NULL)
 poosum[c('site', 'month')] <- str_split_fixed(poosum$code, '-', 2)
 poosum$month <-as.numeric(poosum$month)
 head(poosum)
@@ -100,6 +106,17 @@ colnames(gsc)[2] ="grass_PC1"
 gsc[c('site', 'month')] <- str_split_fixed(gsc$site_mo,' ', 2)
 gsc = subset(gsc, select = -c(site_mo))
 gsc$month <-as.numeric(gsc$month)
+
+##add t-1 column
+gsc <- gsc[order(gsc$site, gsc$mo),]
+
+tm <- as.data.frame(c(NA,gsc[1:3,1],NA,gsc[5:7,1],NA,gsc[9:11,1], #bison
+NA,gsc[13:15,1],NA,gsc[17:19,1],NA,gsc[21:22,1], #cattle
+NA, #trtpd
+NA,gsc[25:27,1],NA,gsc[29:31,1],NA,gsc[33:35,1], #ungrazed
+NA,gsc[37:38,1],NA,gsc[40:41,1],NA,gsc[43,1])) #untrtpd
+colnames(tm)[1] ="grass_PC_tm1"
+gsc<- cbind(gsc,tm)
 
 ests <- merge(gsc,estp,by=c("site","month"),all.y=T)
 dim(ests)
