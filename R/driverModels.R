@@ -36,7 +36,7 @@ prior1 = c(set_prior("normal(0,3)", class = "Intercept"))
 ##################cp
 head(cp)
 
-fit <- brm(body.mean|se(body.se) ~ trtbison + trtcattle + trtungrazed + trtuntrtpd + trttrtpd + iMo + sTemp48hr, data = cp, iter=5000, init = 0,
+fit <- brm(body.mean|se(body.se) ~ trt + iMo + sTemp48hr, data = cp, iter=5000, init = 0,
             chains = 4, prior = prior1,
             control = list(adapt_delta = 0.90,
                            max_treedepth = 12))
