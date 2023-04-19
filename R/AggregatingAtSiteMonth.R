@@ -38,13 +38,19 @@ dbsum$month <-as.numeric(dbsum$month)
 head(dbsum)
 dim(dbsum)
 
-dcode <- data.frame((dbsum %>% drop_na(trt) %>% model_matrix(~ -1 + trt)))
-dbsum_d <- cbind(dbsum,dcode)
-head(dbsum_d)
+#dcode <- data.frame((dbsum %>% drop_na(trt) %>% model_matrix(~ -1 + trt)))
+#dbsum <- cbind(dbsum,dcode)
+#head(dbsum)
 
 ############# attach temp data
 temp <- read.csv("outputs/Temp_daily_SiteMo.csv")
-est <- merge(dbsum_d,temp,by=c("site","month"),all.x=T, all.y=T)
+est <- merge(dbsum,temp,by=c("site","month"),all.x=T, all.y=T)
+head(est)
+dim(est)
+
+####### attach stocking densities
+st <- read.csv("rawdata/stocking.csv")
+est <- merge(est,st,by=c("site"),all.x=T, all.y=T)
 head(est)
 dim(est)
 
