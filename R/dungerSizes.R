@@ -4,7 +4,7 @@ setwd("C:/Users/elwel/OneDrive/Desktop/AmongTheDung")
 #Ben's working directory:
 
 ##load libraries
-library(lme4)
+library(brms)
 library(stringr)
 
 # attach data
@@ -32,11 +32,18 @@ cp$trt_mo <- paste(cp$trt,cp$month)
 ests_cp <- NULL
 for(i in unique(cp$trt_mo)){
   sub <- cp[cp$trt_mo == i, ]
-  ests_cp.i <- coef(summary(lmer(body.length..mm. ~ 1 + (1|trap:site), data = sub, )))[1,1:2]
-  ests_cp.i <- data.frame(trt_mo = i, t(ests_cp.i))
+  fit <- brm(body.length..mm. ~ 1 + (1|trap:site), data = sub)
+	#pull out fixed effects
+	cp_fixed_95 <- fixef(fit, probs = c(0.05, 0.95))[1,]
+	cp_fixed_90 <- fixef(fit, probs = c(0.10, 0.90))[1,3:4]
+	cp_fixed_80 <- fixef(fit, probs = c(0.20, 0.80))[1,3:4]
+  ests_cp.i <- data.frame(trt_mo = i, t(cp_fixed_95), t(cp_fixed_90), t(cp_fixed_80))
   ests_cp <- rbind(ests_cp, ests_cp.i) ; rm(ests_cp.i, sub)
 } ; rm(i)
 ests_cp
+
+fit <- brm(body.length..mm. ~ 1 + (1|trap:site), data = cp)
+cp_fixed_95 <- fixef(fit, probs = c(0.05, 0.95))[1,]
 
 ests_cp[c('trt', 'month')] <- str_split_fixed(ests_cp$trt_mo, ' ', 2)
 colnames(ests_cp)[2] ="body_mm_est"
