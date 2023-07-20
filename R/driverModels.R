@@ -16,10 +16,11 @@ db$site_broadly <- db$site
 db$iMo <- db$month - min(db$month)+1
 
 all <- read.csv("rawdata/DungersAll.csv")
+all$spp <- all$species
 head(all)
 
-all_t <- merge(all,db,by=c("site_broadly","month"),all.x=T, all.y=F)
-dim(all_t)
+all_t <- merge(all,db,by=c("site_broadly","month","spp"),all.x=T, all.y=F)
+head(all_t)
 
 #function to add a new column onto the data with scaled vars (with s before their name)
 scaleVars <- function(df){
@@ -30,6 +31,13 @@ scaleVars <- function(df){
 
 #apply function
 all_t <- scaleVars(all_t)
+db <- scaleVars(db)
+
+## subset by group in means sheet
+cp_m <- db[which(db$spp=='Canthon_pilularius'),]
+onF_m <- db[which(db$spp=='Onthophagus_nuchicornis_female'),]
+onM_m <- db[which(db$spp=='Onthophagus_nuchicornis_male'),]
+##
 
 ## subset by group
 cp <- all_t[which(all_t$spp=='Canthon_pilularius'),]
@@ -37,18 +45,19 @@ onF <- all_t[which(all_t$spp=='Onthophagus_nuchicornis_female'),]
 onM <- all_t[which(all_t$spp=='Onthophagus_nuchicornis_male'),]
 ##
 
+
 #define prior
 prior1 = c(set_prior("normal(0,3)", class = "Intercept"))
 #prior1 = c(set_prior("horseshoe(1)", class = "b"))
 ##################cp
 head(cp)
 
-#fit <- brm(body.mean|se(body.se) ~ sbison_dens + scattle_dens + sPD_pres + sinsecticide + iMo + sTemp48hr + (1|site), data = cp, iter=5000, init = 0,
-#            chains = 4, prior = prior1,
-#            control = list(adapt_delta = 0.90,
-#                           max_treedepth = 12))
+fit <- brm(body.mean|se(body.se) ~ sbison_dens + scattle_dens + sPD_pres + sinsecticide + iMo + sTemp48hr + (1|site), data = db, iter=5000, init = 0,
+            chains = 4, prior = prior1,
+            control = list(adapt_delta = 0.90,
+                           max_treedepth = 12))
 
-fit <- brm(body.length..mm. ~ sbison_dens + scattle_dens + sPD_pres + sinsecticide + iMo + sTemp48hr + (1|site_broadly), data = cp, iter=5000, init = 0,
+fit <- brm(body.length..mm. ~ sbison_dens + scattle_dens + sPD_pres + sinsecticide + iMo + sTemp48hr + TrapCount + (1|trap:site_broadly), data = cp, iter=5000, init = 0,
             chains = 4, prior = prior1,
             control = list(adapt_delta = 0.90,
                            max_treedepth = 12))
