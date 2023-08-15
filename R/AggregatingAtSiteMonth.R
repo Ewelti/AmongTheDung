@@ -18,6 +18,9 @@ head(dungb)
 unique(dungb$species)
 dungb <- dungb[which(dungb$site_rep==1),]
 
+# attach size estimates
+size <- read.csv("outputs/BodySizeEsts.csv")
+
 #rename columns
 colnames(dungb)[colnames(dungb) == "wing.center..mm."] ="wing"
 colnames(dungb)[colnames(dungb) == "thorax.length..mm."] ="thorax"
@@ -31,7 +34,31 @@ head(dungb)
 dungb$code_spp <- paste(dungb$trt,dungb$site_broadly,dungb$month,dungb$species)
 unique(dungb$code_spp)
 
-#means by trt
+###############################STILL WORKING ON THIS SECTION TO UPDATE to BAYESIAN
+#######calculate estimates
+ests <- NULL
+for(i in unique(dungb$code_spp)){
+  sub <- dungb[dungb$code_spp == i, ]
+  fit <- brm(body ~ 1 + (1|trap), data = sub)
+	#pull out fixed effects
+	fixed_95 <- fixef(fit, probs = c(0.05, 0.95))[1,]
+	fixed_90 <- fixef(fit, probs = c(0.10, 0.90))[1,3:4]
+	fixed_80 <- fixef(fit, probs = c(0.20, 0.80))[1,3:4]
+  ests.i <- data.frame(code_spp = i, t(fixed_95), t(fixed_90), t(fixed_80))
+  ests <- rbind(ests, ests.i) ; rm(ests.i, sub)
+} ; rm(i)
+ests
+
+ests[c('trt', 'site', 'month', 'spp')] <- str_split_fixed(ests$code_spp, ' ', 4)
+colnames(ests)[2] ="body_mm_est"
+colnames(ests)[3] ="body_mm_SE"
+ests$month <-as.numeric(ests$month)
+ests <- ests_cp[order(ests$month,ests_cp$trt),]
+ests$mo_jit <- (ests$month + c(-0.1,-0.2,0,0.2,0.1))
+ests$spp <- rep("CP", 15)
+#################################################
+
+#means by trt##################### OLD SECTION JUST USING MEANS
 dbsum <- aggregate(cbind(wing,thorax,head,forearm,body) ~ code_spp, data = dungb, FUN = function(x)c(mean = mean(x),se = std.error(x)))
 dbsum[c('trt','site', 'month', 'spp')] <- str_split_fixed(dbsum$code_spp, ' ', 4)
 dbsum$month <-as.numeric(dbsum$month)
