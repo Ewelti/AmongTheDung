@@ -53,9 +53,8 @@ ests[c('trt', 'site', 'month', 'spp')] <- str_split_fixed(ests$code_spp, ' ', 4)
 colnames(ests)[2] ="body_mm_est"
 colnames(ests)[3] ="body_mm_SE"
 ests$month <-as.numeric(ests$month)
-ests <- ests_cp[order(ests$month,ests_cp$trt),]
-ests$mo_jit <- (ests$month + c(-0.1,-0.2,0,0.2,0.1))
-ests$spp <- rep("CP", 15)
+write.csv(ests, "outputs/BodyEsts_SiteMonth.csv")
+
 #################################################
 
 #means by trt##################### OLD SECTION JUST USING MEANS
