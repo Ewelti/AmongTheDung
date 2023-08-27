@@ -8,19 +8,18 @@ setwd("C:/Users/elwel/OneDrive/Desktop/AmongTheDung")
 library("brms")
 
 ##read data
-db <- read.csv("outputs/SiteMo_dungers.csv")
+dr <- read.csv("outputs/SiteMo_drivers.csv")
+head(dr)
+dim(dr)
+ds <- read.csv("outputs/BodyEsts_SiteMonth.csv")
+head(ds)
+dim(ds)
+db <- merge(dr,ds,by=c("site","month"),all.y=T)
 head(db)
-db$site_broadly <- db$site
+dim(db)
 
 #month as an index starting from 1
 db$iMo <- db$month - min(db$month)+1
-
-all <- read.csv("rawdata/DungersAll.csv")
-all$spp <- all$species
-head(all)
-
-all_t <- merge(all,db,by=c("site_broadly","month","spp"),all.x=T, all.y=F)
-head(all_t)
 
 #function to add a new column onto the data with scaled vars (with s before their name)
 scaleVars <- function(df){
@@ -30,7 +29,6 @@ scaleVars <- function(df){
 }
 
 #apply function
-all_t <- scaleVars(all_t)
 db <- scaleVars(db)
 
 ## subset by group in means sheet
@@ -39,36 +37,46 @@ onF_m <- db[which(db$spp=='Onthophagus_nuchicornis_female'),]
 onM_m <- db[which(db$spp=='Onthophagus_nuchicornis_male'),]
 ##
 
-## subset by group
-cp <- all_t[which(all_t$spp=='Canthon_pilularius'),]
-onF <- all_t[which(all_t$spp=='Onthophagus_nuchicornis_female'),]
-onM <- all_t[which(all_t$spp=='Onthophagus_nuchicornis_male'),]
-##
-
-
 #define prior
 prior1 = c(set_prior("normal(0,3)", class = "Intercept"))
 #prior1 = c(set_prior("horseshoe(1)", class = "b"))
 ##################cp
-head(cp)
+head(cp_m)
 
-fit <- brm(body.mean|se(body.se) ~ sbison_dens + scattle_dens + sPD_pres + sinsecticide + iMo + sTemp48hr + (1|site), data = db, iter=5000, init = 0,
+fit_in <- brm(body_mm_est|se(body_mm_SE) ~ sinsecticide + sCP_dens + (1|site), data = cp_m, iter=5000, init = 0,
             chains = 4, prior = prior1,
             control = list(adapt_delta = 0.90,
                            max_treedepth = 12))
 
-fit <- brm(body.length..mm. ~ sbison_dens + scattle_dens + sPD_pres + sinsecticide + iMo + sTemp48hr + TrapCount + (1|trap:site_broadly), data = cp, iter=5000, init = 0,
+cp_n <- cp_m[!cp_m$trt=='trtpd',]
+
+fit_trt <- brm(body_mm_est|se(body_mm_SE) ~ sbison_dens + scattle_dens + sPD_pres + sCP_dens + (1|site), data = cp_n, iter=5000, init = 0,
+            chains = 4, prior = prior1,
+            control = list(adapt_delta = 0.90,
+                           max_treedepth = 12))
+
+fit_co <- brm(body_mm_est|se(body_mm_SE) ~ sTemp48hr + grass_PC1 + sbrowser_100m2 + spatty_100m2 + sPD_1m2 + sCP_dens + (1|site), data = cp_m, iter=5000, init = 0,
+            chains = 4, prior = prior1,
+            control = list(adapt_delta = 0.90,
+                           max_treedepth = 12))
+
+fit_1mp <- brm(body_mm_est|se(body_mm_SE) ~ sTemp20day + (1|site), data = cp_m, iter=5000, init = 0,
+            chains = 4, prior = prior1,
+            control = list(adapt_delta = 0.90,
+                           max_treedepth = 12))
+
+fit_2mp <- brm(body_mm_est|se(body_mm_SE) ~ sTemp60day + (1|site), data = cp_m, iter=5000, init = 0,
             chains = 4, prior = prior1,
             control = list(adapt_delta = 0.90,
                            max_treedepth = 12))
 
 #check model
-plot(fit)
-sr_loo <- loo(fit, cores = getOption("mc.cores", 1))
+plot(fit_trt)
+sr_loo <- loo(fit_trt, cores = getOption("mc.cores", 1))
 sr_loo
 
 #pull out fixed effects
-cp_fixed_95 <- fixef(fit, probs = c(0.05, 0.95))
+cp_fixed_95 <- fixef(fit_trt, probs = c(0.05, 0.95))
 cp_fixed_90 <- fixef(fit, probs = c(0.10, 0.90))
 cp_fixed_80 <- fixef(fit, probs = c(0.20, 0.80))
 ####
