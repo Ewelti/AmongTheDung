@@ -79,18 +79,12 @@ gsc[c('site', 'month')] <- str_split_fixed(gsc$site_mo,' ', 2)
 gsc = subset(gsc, select = -c(site_mo))
 gsc$month <-as.numeric(gsc$month)
 
-##add t-1 column
+##add t-1 & t-2 column
 gsc <- gsc[order(gsc$site, gsc$mo),]
+write.csv(gsc, "outputs/plantChem_PC1.csv")
+pt <- read.csv("outputs/plantChem_PC1_tm.csv")
 
-tm <- as.data.frame(c(NA,gsc[1:3,1],NA,gsc[5:7,1],NA,gsc[9:11,1], #bison
-NA,gsc[13:15,1],NA,gsc[17:19,1],NA,gsc[21:22,1], #cattle
-NA, #trtpd
-NA,gsc[25:27,1],NA,gsc[29:31,1],NA,gsc[33:35,1], #ungrazed
-NA,gsc[37:38,1],NA,gsc[40:41,1],NA,gsc[43,1])) #untrtpd
-colnames(tm)[1] ="grass_PC_tm1"
-gsc<- cbind(gsc,tm)
-
-ests <- merge(gsc,estp,by=c("site","month"),all.y=T)
+ests <- merge(pt,estp,by=c("site","month"),all.y=T)
 dim(ests)
 ests = subset(ests, select = -c(code,code_spp))
 head(ests)
@@ -101,10 +95,16 @@ dens <- dens[which(dens$DriverData=="y"),]
 head(dens)
 agg_cp <- aggregate(dens$CanPil, by=list(dens$site,dens$month), FUN=sum)
 colnames(agg_cp) <- c('site','month','CP_dens')
-ests <- merge(agg_cp,ests,by=c("site","month"),all.y=T)
 agg_on <- aggregate(dens$OntNuc, by=list(dens$site,dens$month), FUN=sum)
 colnames(agg_on) <- c('site','month','ON_dens')
-ests <- merge(agg_on,ests,by=c("site","month"),all.y=T)
+agg <- merge(agg_on,agg_cp,by=c("site","month"),all.y=T)
+
+##add t-1 & t-2 column
+agg <- agg[order(agg$site, agg$mo),]
+write.csv(agg, "outputs/densities_siteMo.csv")
+dens <- read.csv("outputs/densities_siteMo_tm.csv")
+
+ests <- merge(dens,ests,by=c("site","month"),all.y=T)
 
 ##
 write.csv(ests, "outputs/SiteMo_drivers.csv")
