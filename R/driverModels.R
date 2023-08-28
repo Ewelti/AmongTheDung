@@ -185,7 +185,7 @@ onM_co <- cbind(spp= rep("onM",7), response= rep("BodySize",7),onM_95[,1:4], onM
 onM_co
 
 co_models <- rbind(cp_co,onF_co,onM_co)
-write.csv(co_models, "outputs/DriverModelOutputs/BodySize_CurrentConditions.csv"
+write.csv(co_models, "outputs/DriverModelOutputs/BodySize_CurrentConditions.csv")
 
 #check models
 plot(fit)
