@@ -155,3 +155,27 @@ colnames(ests)[2] ="horn_mm_est"
 colnames(ests)[3] ="horn_mm_SE"
 ests$month <-as.numeric(ests$month)
 write.csv(ests, "outputs/HornEsts_SiteMonth.csv")
+
+#######calculate horn size estimates for trt month level
+dbhorn <- dungb[complete.cases(dungb$horn), ]
+dungb$code_tm <- paste(dungb$trt,dungb$month)
+unique(dungb$code_tm)
+head(dbhorn)
+ests <- NULL
+for(i in unique(dbhorn$code_tm)){
+  sub <- dungb[dbhorn$code_tm == i, ]
+  fit <- brm(horn ~ 1 + (1|site:trap), data = sub)
+	#pull out fixed effects
+	fixed_95 <- fixef(fit, probs = c(0.05, 0.95))[1,]
+	fixed_90 <- fixef(fit, probs = c(0.10, 0.90))[1,3:4]
+	fixed_80 <- fixef(fit, probs = c(0.20, 0.80))[1,3:4]
+  ests.i <- data.frame(code_tm = i, t(fixed_95), t(fixed_90), t(fixed_80))
+  ests <- rbind(ests, ests.i) ; rm(ests.i, sub)
+} ; rm(i)
+ests
+
+ests[c('trt', 'month')] <- str_split_fixed(ests$code_tm, ' ', 2)
+colnames(ests)[2] ="horn_mm_est"
+colnames(ests)[3] ="horn_mm_SE"
+ests$month <-as.numeric(ests$month)
+write.csv(ests, "outputs/HornEsts_TrtMonth.csv")
