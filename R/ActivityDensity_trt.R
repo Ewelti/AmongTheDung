@@ -13,7 +13,7 @@ library(tidyverse)
 library(modelr)
 library(brms)
 
-# attach dung beetle size data
+# attach dung beetle density data
 dens <- read.csv("rawdata/DB_densities.csv")
 head(dens)
 ##

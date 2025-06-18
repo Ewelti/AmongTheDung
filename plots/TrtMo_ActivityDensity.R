@@ -1,9 +1,9 @@
 ##Set working directory
 #Ellen's working directory:
 setwd("C:/Users/elwel/OneDrive/Desktop/AmongTheDung")
-#Ben's working directory:
 
 ######################
+#install.packages("scales")
 library(scales)
 cp_d <- read.csv("outputs/Trt_Mo/CanPil_TRTmo_ActDens.csv")
 cp_d$spp <- rep("CP", 15)
@@ -15,9 +15,9 @@ colnames(on_d)[3] ="AcDe"
 colnames(on_d)[4] ="SE"
 dens <- rbind(cp_d,on_d)
 
-tiff(filename = "plots/ActivityDensities_TrtMo.tiff", width = 10, height = 5, units = 'in', res = 600, compression = 'lzw')
+tiff(filename = "plots/ActivityDensities_TrtMo.tiff", width = 10, height = 10, units = 'in', res = 600, compression = 'lzw')
 
-par(mar=c(2.5,5,0.4,0.2),mfrow=c(1,2))
+par(mar=c(2.5,5,0.4,0.2),mfrow=c(2,2))
 plot(1, type="n", xlim=c(5.8,8.2), ylim=c(0,165),las=1,ylab="",xlab="", xaxt='n')
 axis(1, at=c(6,7,8),cex.axis=1.1,labels=c("June","July","August"))
 box(lwd=2)
@@ -90,6 +90,41 @@ points(dens$AcDe[dens$trt=="trtpd" & dens$spp=="ON"] ~ dens$mo_jit[dens$trt=="tr
 points(dens$AcDe[dens$trt=="untrtpd" & dens$spp=="ON"] ~ dens$mo_jit[dens$trt=="untrtpd" & dens$spp=="ON"],pch=25,col="goldenrod2",bg="goldenrod2",cex=2.5)
 legend("topright", legend="B", bty="n", cex=2)
 ##
+
+
+# attach raw dung beetle density data
+den <- read.csv("rawdata/DB_densities.csv")
+head(den)
+##
+den$trt <- factor(den$trt, levels=c("bison", "cattle", "trtpd", "untrtpd", "ungrazed"))
+
+boxplot((den$CanPil+1)~den$trt, xlab="", ylab="", log="y", col=c("sienna", "gray20", "firebrick2","goldenrod2","dodgerblue"), yaxt='n')
+axis(2, at=c(1,3,6,11,21,51,101,201,501),cex.axis=1.1,labels=c(0,2,5,10,20,50,100,200,500), las=1)
+box(lwd=2)
+title(ylab=substitute(paste(italic('C. pilularius'), ' beetles/trap')), line=3, cex.lab=1.6)
+legend("topright", legend="C", bty="n", cex=2)
+tr<-(aov(den$CanPil~den$trt))
+tukey.test <- TukeyHSD(tr)
+tukey.test
+#text(1.15, 1.5, "a", cex=2)
+#text(2.15, 1.5, "b", cex=2)
+#text(3.15, 1.5, "a", cex=2)
+#text(4.15, 1.5, "b", cex=2)
+#text(5.15, 1.5, "a", cex=2)
+
+boxplot((den$OntNuc+1)~den$trt, xlab="", ylab="", log="y",col=c("sienna", "gray20", "firebrick2","goldenrod2","dodgerblue"), yaxt='n')
+axis(2, at=c(1,3,6,11,21,51,101,201),cex.axis=1.1,labels=c(0,2,5,10,20,50,100,200), las=1)
+box(lwd=2)
+title(ylab=substitute(paste(italic('O. nuchicornis'), ' beetles/trap')), line=3, cex.lab=1.6)
+legend("topright", legend="D", bty="n", cex=2)
+tr<-(aov(den$OntNuc~den$trt))
+tukey.test <- TukeyHSD(tr)
+tukey.test
+#text(1.25, 1.5, "ab", cex=2)
+#text(2.15, 1.5, "a", cex=2)
+#text(3.25, 1.5, "ab", cex=2)
+#text(4.15, 1.5, "c", cex=2)
+#text(5.15, 1.5, "b", cex=2)
 
 dev.off()
 
