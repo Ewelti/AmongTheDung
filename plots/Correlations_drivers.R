@@ -3,7 +3,7 @@
 setwd("C:/Users/elwel/OneDrive/Desktop/AmongTheDung")
 
 # load libraries
-install.packages("corrplot")
+#install.packages("corrplot")
 library(corrplot)
 
 ##read data
@@ -53,7 +53,7 @@ corrplot(corr=CorDat$r, method="number")
 ##save plot
 tiff(filename = "plots/Drivers_Correlations.tiff", width = 7, height = 6, units = 'in', res = 600, compression = 'lzw')
 
-corrplot(corr=CorDat$r, p.mat = CorDat$P,
+corrplot(corr=CorDat$r, p.mat = CorDat$P, tl.col = "black",
          type="lower", insig="pch", sig.level =.05, pch.cex = .9)
 
 dev.off()
